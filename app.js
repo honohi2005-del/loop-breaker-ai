@@ -285,10 +285,11 @@ function closeReleaseModal(expired = false) {
 
 async function detectRuntime() {
   try {
-    await apiCall('intervene', { input: 'テスト', mode: 'flat', probe: true });
+    const runtime = await apiCall('intervene', { input: 'テスト', mode: 'flat', probe: true });
     state.runtimeReady = true;
     state.source = 'AI';
-    setBadge('AI ready', true);
+    const label = runtime.provider ? `${String(runtime.provider).toUpperCase()} ready` : 'AI ready';
+    setBadge(label, true);
   } catch {
     state.runtimeReady = false;
     state.source = 'LOCAL';

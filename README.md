@@ -23,8 +23,14 @@ AI を使うには、次のどちらかでデプロイしてください。
 4. Build command は空で OK
 5. Publish directory は `.` のままで OK
 6. Netlify の Site configuration / Environment variables で以下を追加
-   - `OPENAI_API_KEY` = あなたの OpenAI API key
-   - 任意で `OPENAI_MODEL` = 使いたいモデル名
+   - Groq を使う場合:
+     - `GROQ_API_KEY` = あなたの Groq API key
+     - 任意で `GROQ_MODEL` = 使いたいモデル名（既定: `llama-3.3-70b-versatile`）
+   - OpenAI を使う場合:
+     - `OPENAI_API_KEY` = あなたの OpenAI API key
+     - 任意で `OPENAI_MODEL` = 使いたいモデル名
+   - 任意で `AI_PROVIDER` = `groq` または `openai`
+     - 未指定時は `GROQ_API_KEY` があれば Groq を優先、なければ OpenAI を使います。
 7. 再デプロイ
 
 ## ローカル確認

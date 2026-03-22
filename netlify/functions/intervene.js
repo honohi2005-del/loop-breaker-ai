@@ -1,4 +1,4 @@
-const { response, extractJson, callOpenAI } = require('./_shared');
+const { response, extractJson, callOpenAI, getRuntimeStatus } = require('./_shared');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return response(405, { error: 'Method not allowed' });
@@ -6,9 +6,9 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body || '{}');
     if (body.probe) {
-      const aiReady = Boolean(process.env.OPENAI_API_KEY);
-      if (!aiReady) return response(503, { ok: false, reason: 'OPENAI_API_KEY is missing' });
-      return response(200, { ok: true });
+      const runtime = getRuntimeStatus();
+      if (!runtime.ready) return response(503, { ok: false, reason: runtime.reason });
+      return response(200, { ok: true, provider: runtime.provider, model: runtime.model });
     }
 
     const mode = ['flat', 'dry', 'soft'].includes(body.mode) ? body.mode : 'flat';
