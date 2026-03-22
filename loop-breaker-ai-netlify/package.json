@@ -1,0 +1,10 @@
+{
+  "name": "loop-breaker-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered PWA for interrupting rumination with short public-safe prompts.",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx netlify dev"
+  }
+}

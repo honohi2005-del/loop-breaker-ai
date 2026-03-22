@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Loop Breaker AI" />
+  <meta name="description" content="反芻思考を短く切るためのAI介入PWA。" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Loop Breaker AI</title>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="panel hero">
+      <div class="hero-top">
+        <div>
+          <p class="eyebrow">COMMUTE MODE</p>
+          <h1>Loop Breaker AI</h1>
+        </div>
+        <div class="status-wrap">
+          <span id="runtimeBadge" class="badge badge-soft">起動中</span>
+        </div>
+      </div>
+      <p class="hero-copy">長話ではなく、短いラベルと観察タスクで反芻をいったん切るためのPWAです。</p>
+    </section>
+
+    <section id="homeScreen" class="panel screen active">
+      <div class="field-block">
+        <label for="thoughtInput">今のぐるぐるを一言で</label>
+        <textarea id="thoughtInput" maxlength="120" placeholder="例：今日の会話を何度も思い返してしまう"></textarea>
+        <div class="field-meta">
+          <span>長文にしない方が向いています</span>
+          <span id="charCount">0 / 120</span>
+        </div>
+      </div>
+
+      <div class="row-block">
+        <p class="row-title">トーン</p>
+        <div class="segmented" id="modeSelect">
+          <button class="seg active" data-mode="flat">Flat</button>
+          <button class="seg" data-mode="dry">Dry</button>
+          <button class="seg" data-mode="soft">Soft</button>
+        </div>
+      </div>
+
+      <div class="row-block">
+        <p class="row-title">テンポ</p>
+        <div class="segmented" id="tempoSelect">
+          <button class="seg" data-tempo="slow">ゆっくり</button>
+          <button class="seg active" data-tempo="normal">標準</button>
+          <button class="seg" data-tempo="fast">速い</button>
+        </div>
+      </div>
+
+      <div class="cta-stack">
+        <button id="startBtn" class="btn btn-primary">Break the Loop</button>
+        <button id="releaseBtn" class="btn btn-secondary">Write and release</button>
+      </div>
+
+      <div class="tiny-note">
+        AI関数が使えない環境では、自動的にローカル生成モードに切り替わります。
+      </div>
+    </section>
+
+    <section id="sessionScreen" class="panel screen">
+      <div class="session-head">
+        <span id="sessionMode" class="badge badge-outline">Flat</span>
+        <span id="sessionSource" class="badge badge-soft">AI</span>
+      </div>
+
+      <div class="stage-card">
+        <div class="stage-label">LOOP</div>
+        <div id="loopLabel" class="main-line">…</div>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">CUT</div>
+        <div id="mainMessage" class="main-line">…</div>
+      </div>
+      <div class="stage-card stage-task">
+        <div class="stage-label">NOW</div>
+        <div id="currentTask" class="task-line">…</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+        <div id="progressText" class="progress-text">準備中</div>
+      </div>
+
+      <div class="cta-stack compact">
+        <button id="nextBtn" class="btn btn-secondary">次へ</button>
+        <button id="stopBtn" class="btn btn-ghost">終了</button>
+      </div>
+    </section>
+
+    <section id="doneScreen" class="panel screen">
+      <div class="done-mark">◌</div>
+      <h2>中断しました。</h2>
+      <p class="done-copy">戻るなら自由です。続きを考える必要は、今すぐにはありません。</p>
+      <div class="cta-stack compact">
+        <button id="againBtn" class="btn btn-primary">もう一度</button>
+        <button id="backBtn" class="btn btn-secondary">ホームへ</button>
+      </div>
+    </section>
+
+    <section id="releaseModal" class="overlay hidden" aria-hidden="true">
+      <div class="panel modal">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">WRITE AND RELEASE</p>
+            <h2>30秒で消えます</h2>
+          </div>
+          <button id="closeReleaseBtn" class="icon-btn" aria-label="閉じる">×</button>
+        </div>
+        <textarea id="releaseInput" maxlength="240" placeholder="ここでは保存されません"></textarea>
+        <div class="field-meta">
+          <span id="releaseCountdown">30秒</span>
+          <span>時間が来ると自動で消えます</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
