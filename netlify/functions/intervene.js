@@ -5,7 +5,11 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    if (body.probe) return response(200, { ok: true });
+    if (body.probe) {
+      const aiReady = Boolean(process.env.OPENAI_API_KEY);
+      if (!aiReady) return response(503, { ok: false, reason: 'OPENAI_API_KEY is missing' });
+      return response(200, { ok: true });
+    }
 
     const mode = ['flat', 'dry', 'soft'].includes(body.mode) ? body.mode : 'flat';
     const userInput = String(body.input || '').trim().slice(0, 160) || 'なんとなく嫌な気分が続く';
