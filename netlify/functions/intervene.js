@@ -95,8 +95,20 @@ function isGenericNext(text) {
   return !text || /^(呼吸を1回だけ長く吐いてください。?)$/.test(text);
 }
 
-function looksJapanese(text) {
-  return /[\u3040-\u30ff\u3400-\u9fff]/.test(String(text || ''));
+function isMostlyJapanese(text, options = {}) {
+  const { minRatio = 0.45, minJpChars = 3 } = options;
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+
+  const visible = raw
+    .replace(/\s+/g, '')
+    .replace(/[0-9０-９.,!！?？:：;；\-—_()（）「」『』【】[\]/\\'"`~+*=<>|]/g, '');
+
+  if (!visible) return false;
+  const jpMatches = visible.match(/[\u3040-\u30ff\u3400-\u9fff]/g) || [];
+  const jpCount = jpMatches.length;
+
+  return jpCount >= minJpChars && jpCount / visible.length >= minRatio;
 }
 
 function buildVariationPack() {
@@ -190,10 +202,10 @@ Task shape: ${variation.taskShape}`;
     const next = clean(parsed.next, 80);
 
     return response(200, {
-      label: isGenericLabel(label) || !looksJapanese(label) ? local.label : label,
-      message: isGenericMessage(message) || !looksJapanese(message) ? local.message : message,
-      task: isGenericTask(task) || !looksJapanese(task) ? local.task : task,
-      next: isGenericNext(next) || next === task || !looksJapanese(next) ? local.next : next,
+      label: isGenericLabel(label) || !isMostlyJapanese(label, { minRatio: 0.3, minJpChars: 2 }) ? local.label : label,
+      message: isGenericMessage(message) || !isMostlyJapanese(message, { minRatio: 0.45, minJpChars: 4 }) ? local.message : message,
+      task: isGenericTask(task) || !isMostlyJapanese(task, { minRatio: 0.45, minJpChars: 4 }) ? local.task : task,
+      next: isGenericNext(next) || next === task || !isMostlyJapanese(next, { minRatio: 0.45, minJpChars: 4 }) ? local.next : next,
     });
   } catch (error) {
     return response(500, { error: error.message || 'intervene failed' });

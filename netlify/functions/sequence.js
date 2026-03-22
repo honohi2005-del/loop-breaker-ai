@@ -60,8 +60,19 @@ function clean(text, max = 80) {
   return String(text || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-function looksJapanese(text) {
-  return /[\u3040-\u30ff\u3400-\u9fff]/.test(String(text || ''));
+function isMostlyJapanese(text, options = {}) {
+  const { minRatio = 0.45, minJpChars = 4 } = options;
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+
+  const visible = raw
+    .replace(/\s+/g, '')
+    .replace(/[0-9０-９.,!！?？:：;；\-—_()（）「」『』【】[\]/\\'"`~+*=<>|]/g, '');
+
+  if (!visible) return false;
+  const jpMatches = visible.match(/[\u3040-\u30ff\u3400-\u9fff]/g) || [];
+  const jpCount = jpMatches.length;
+  return jpCount >= minJpChars && jpCount / visible.length >= minRatio;
 }
 
 function buildLocalSequence(label) {
@@ -76,7 +87,7 @@ function fillSteps(rawSteps, label) {
 
   for (const step of rawSteps) {
     const text = clean(step);
-    if (!text || seen.has(text) || !looksJapanese(text)) continue;
+    if (!text || seen.has(text) || !isMostlyJapanese(text)) continue;
     output.push(text);
     seen.add(text);
     if (output.length === 5) break;
