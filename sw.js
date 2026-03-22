@@ -1,4 +1,4 @@
-const CACHE_NAME = 'loop-breaker-ai-v2';
+const CACHE_NAME = 'loop-breaker-ai-v3';
 const ASSETS = [
   './',
   './index.html',
