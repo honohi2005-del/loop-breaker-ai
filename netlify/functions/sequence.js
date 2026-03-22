@@ -60,6 +60,10 @@ function clean(text, max = 80) {
   return String(text || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function looksJapanese(text) {
+  return /[\u3040-\u30ff\u3400-\u9fff]/.test(String(text || ''));
+}
+
 function buildLocalSequence(label) {
   const order = pick(ORDER_PATTERNS);
   return order.map((category) => clean(pick(CATEGORY_BANK[category]).replace('{label}', label)));
@@ -72,7 +76,7 @@ function fillSteps(rawSteps, label) {
 
   for (const step of rawSteps) {
     const text = clean(step);
-    if (!text || seen.has(text)) continue;
+    if (!text || seen.has(text) || !looksJapanese(text)) continue;
     output.push(text);
     seen.add(text);
     if (output.length === 5) break;
@@ -118,9 +122,15 @@ Rules:
 - keep all steps socially safe in public transit
 - do not repeat almost the same action
 - include "${label}" in at most one step
+- output must be Japanese only
+- no sarcasm, no insulting or harsh language
 
 Preferred flow order: ${variation.order.join(' -> ')}
 Variation hint: ${variation.hint}
+Tone details:
+- flat: neutral concise
+- dry: game-like mission calls
+- soft: gentle and calm
 Tone: ${mode}`;
 
     const output = await callOpenAI(

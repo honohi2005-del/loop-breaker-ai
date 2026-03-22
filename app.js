@@ -11,8 +11,6 @@ const el = {
   homeScreen: document.getElementById('homeScreen'),
   sessionScreen: document.getElementById('sessionScreen'),
   doneScreen: document.getElementById('doneScreen'),
-  thoughtInput: document.getElementById('thoughtInput'),
-  charCount: document.getElementById('charCount'),
   runtimeBadge: document.getElementById('runtimeBadge'),
   modeSelect: document.getElementById('modeSelect'),
   tempoSelect: document.getElementById('tempoSelect'),
@@ -24,6 +22,8 @@ const el = {
   closeReleaseBtn: document.getElementById('closeReleaseBtn'),
   sessionMode: document.getElementById('sessionMode'),
   sessionSource: document.getElementById('sessionSource'),
+  sessionXp: document.getElementById('sessionXp'),
+  sessionCombo: document.getElementById('sessionCombo'),
   loopLabel: document.getElementById('loopLabel'),
   mainMessage: document.getElementById('mainMessage'),
   currentTask: document.getElementById('currentTask'),
@@ -41,9 +41,32 @@ const tempoMap = {
   fast: 3000,
 };
 
-function $(selector, root = document) {
-  return root.querySelector(selector);
-}
+const modeLabelMap = {
+  flat: 'CALM',
+  dry: 'GAME',
+  soft: 'SOFT',
+};
+
+const seedPromptBank = {
+  flat: [
+    '今の注意を外側へ切り替える',
+    '考えの反復を一度止める',
+    '周囲の情報に意識を戻す',
+    '身体感覚ベースで中断する',
+  ],
+  dry: [
+    'クイックミッションを開始する',
+    'ミッション形式で注意を切り替える',
+    'ステージ形式で観察タスクを進める',
+    'ラウンド制で反復思考を中断する',
+  ],
+  soft: [
+    'やさしく注意を戻す',
+    '落ち着いて外界へ戻る',
+    '無理なく思考を切り替える',
+    'ゆっくり中断して戻る',
+  ],
+};
 
 function setScreen(name) {
   for (const screen of [el.homeScreen, el.sessionScreen, el.doneScreen]) {
@@ -59,8 +82,10 @@ function setBadge(text, ai = false) {
   el.runtimeBadge.className = ai ? 'badge badge-outline' : 'badge badge-soft';
 }
 
-function updateCount() {
-  el.charCount.textContent = `${el.thoughtInput.value.length} / 120`;
+function buildSessionSeedInput(mode) {
+  const seed = pick(seedPromptBank[mode] || seedPromptBank.flat);
+  const nonce = Math.floor(Math.random() * 10000);
+  return `${seed} #${nonce}`;
 }
 
 function setupSegments(container, key) {
@@ -117,11 +142,11 @@ function createLocalIntervention(input, mode) {
       '推論はここで切ります。',
     ],
     dry: [
-      '同じ反復です。ここで切ります。',
-      'この処理は打ち切りです。',
-      '進展なし。停止します。',
-      '今の推論は中断します。',
-      'ループ検出。終了します。',
+      'ミッション開始。1手ずつ進めます。',
+      'ラウンド開始。短く切り替えます。',
+      'ステージ進行。次の行動へ。',
+      'クエストモード。外側を観察します。',
+      'コンボ継続。次のタスクへ。',
     ],
     soft: [
       '今は答えを急がなくて大丈夫です。',
@@ -220,8 +245,18 @@ async function fetchSequence(label, mode) {
 }
 
 function updateSessionHeader() {
-  el.sessionMode.textContent = state.mode.toUpperCase();
+  el.sessionMode.textContent = modeLabelMap[state.mode] || state.mode.toUpperCase();
   el.sessionSource.textContent = state.source === 'AI' ? 'AI' : 'LOCAL';
+}
+
+function updateSessionStats() {
+  if (!state.session) {
+    el.sessionXp.textContent = 'XP 0';
+    el.sessionCombo.textContent = 'COMBO x0';
+    return;
+  }
+  el.sessionXp.textContent = `XP ${state.session.xp}`;
+  el.sessionCombo.textContent = `COMBO x${state.session.combo}`;
 }
 
 function renderStage(textTarget, text) {
@@ -237,6 +272,7 @@ function clearSessionTimers() {
 function finishSession() {
   clearSessionTimers();
   state.session = null;
+  updateSessionStats();
   setScreen('done');
 }
 
@@ -257,6 +293,10 @@ function advanceSession(manual = false) {
   renderStage(el.mainMessage, state.session.message);
 
   state.session.index += 1;
+  state.session.combo += 1;
+  state.session.xp += state.mode === 'dry' ? 15 : 10;
+  updateSessionStats();
+
   const total = steps.length;
   const duration = manual ? tempoMap.fast : tempoMap[state.tempo] || tempoMap.normal;
   const startedAt = Date.now();
@@ -272,7 +312,7 @@ function advanceSession(manual = false) {
 }
 
 async function startSession() {
-  const input = el.thoughtInput.value.trim() || 'なんとなく嫌な気分が続く';
+  const input = buildSessionSeedInput(state.mode);
   el.startBtn.disabled = true;
   el.startBtn.textContent = '生成中…';
 
@@ -299,10 +339,13 @@ async function startSession() {
     message: intervention.message || '今は止めます。',
     steps: allSteps,
     index: 0,
+    xp: 0,
+    combo: 0,
     timeoutId: null,
     progressId: null,
   };
 
+  updateSessionStats();
   advanceSession(false);
   el.startBtn.disabled = false;
   el.startBtn.textContent = 'Break the Loop';
@@ -350,7 +393,6 @@ function registerSW() {
   }
 }
 
-el.thoughtInput.addEventListener('input', updateCount);
 setupSegments(el.modeSelect, 'mode');
 setupSegments(el.tempoSelect, 'tempo');
 el.startBtn.addEventListener('click', startSession);
@@ -365,5 +407,5 @@ el.releaseModal.addEventListener('click', (event) => {
 });
 
 detectRuntime();
-updateCount();
+updateSessionStats();
 registerSW();

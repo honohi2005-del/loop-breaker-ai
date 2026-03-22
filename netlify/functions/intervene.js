@@ -8,10 +8,10 @@ const MODE_MESSAGE_BANK = {
     '今は保留で進みます。',
   ],
   dry: [
-    '同じ反復です。ここで切ります。',
-    'この処理は打ち切りです。',
-    'これ以上は無駄です。停止。',
-    '今の推論は中断します。',
+    'ミッション開始。1手ずつ進めます。',
+    'ラウンド開始。次の行動へ。',
+    'ステージ進行。外側を観察します。',
+    'クエスト継続。短く切り替えます。',
   ],
   soft: [
     '今は答えを急がなくて大丈夫です。',
@@ -95,6 +95,10 @@ function isGenericNext(text) {
   return !text || /^(呼吸を1回だけ長く吐いてください。?)$/.test(text);
 }
 
+function looksJapanese(text) {
+  return /[\u3040-\u30ff\u3400-\u9fff]/.test(String(text || ''));
+}
+
 function buildVariationPack() {
   const styleHints = [
     '語尾を毎回変える',
@@ -161,8 +165,14 @@ Hard constraints:
 - task and next must each include at least one concrete noun and one number
 - no "考えてみて" / no abstract advice
 - no repeated sentence openings
+- output must be Japanese only
+- no sarcasm, no insulting or harsh language
 
 Tone mode: ${mode}
+Tone details:
+- flat: neutral and minimal
+- dry: game-like mission voice, playful but short
+- soft: calm and reassuring
 Variation hint: ${variation.styleHint}
 Cut style: ${variation.cutStyle}
 Task shape: ${variation.taskShape}`;
@@ -180,10 +190,10 @@ Task shape: ${variation.taskShape}`;
     const next = clean(parsed.next, 80);
 
     return response(200, {
-      label: isGenericLabel(label) ? local.label : label,
-      message: isGenericMessage(message) ? local.message : message,
-      task: isGenericTask(task) ? local.task : task,
-      next: isGenericNext(next) || next === task ? local.next : next,
+      label: isGenericLabel(label) || !looksJapanese(label) ? local.label : label,
+      message: isGenericMessage(message) || !looksJapanese(message) ? local.message : message,
+      task: isGenericTask(task) || !looksJapanese(task) ? local.task : task,
+      next: isGenericNext(next) || next === task || !looksJapanese(next) ? local.next : next,
     });
   } catch (error) {
     return response(500, { error: error.message || 'intervene failed' });
